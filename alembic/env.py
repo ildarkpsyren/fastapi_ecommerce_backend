@@ -1,10 +1,16 @@
 from __future__ import with_statement
 
-import os
+import sys
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
+
+# Ensure the application package is importable when running Alembic commands.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,13 +20,8 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-# target_metadata = None
-
-from db.base import Base  # noqa
+from app.core.config import get_settings  # noqa
+from app.models import Base  # noqa
 
 target_metadata = Base.metadata
 
@@ -31,12 +32,8 @@ target_metadata = Base.metadata
 
 
 def get_url() -> str:
-    from instance.config import config
-
-    if config.APP_ENVIRONMENT == "development":
-        return config.ALEMBIC_URLS["development"]
-    else:
-        return config.ALEMBIC_URLS["production"]
+    settings = get_settings()
+    return settings.database_url
 
 
 def run_migrations_offline():
