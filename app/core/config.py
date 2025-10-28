@@ -14,12 +14,14 @@ class Settings(BaseSettings):
     exercise so default values are provided.
     """
 
-    APP_NAME: str = "FastAPI E-commerce"
+    APP_NAME: str = "Protorg marketplace"
+    APP_ENVIRONMENT: str = "development"
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     ALGORITHM: str
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
-    VERIFICATION_EMAIL_SENDER: EmailStr | None = None
+    VERIFICATION_EMAIL_SENDER: Optional[EmailStr] = None
+    LOG_LEVEL: str = "INFO"
 
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -28,6 +30,12 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 
     DATABASE_URL: Optional[PostgresDsn] = None
+
+    @field_validator("VERIFICATION_EMAIL_SENDER", mode="before")
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v == "" or v is None:
+            return None
+        return v
 
     @field_validator("DATABASE_URL", mode="before")
     def assemble_db_connection(cls, v: Optional[str], values) -> Any:
@@ -39,7 +47,7 @@ class Settings(BaseSettings):
             password=values.data.get("POSTGRES_PASSWORD"),
             host=values.data.get("POSTGRES_HOST"),
             port=values.data.get("POSTGRES_PORT"),
-            path=f"/{values.data.get('POSTGRES_DB') or ''}",
+            path=values.data.get("POSTGRES_DB") or "",
         )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

@@ -24,17 +24,13 @@ class AuthenticationContext(Plugin):
         This method will be called before processing the request
         """
 
-        # Get bearer token from request header
         bearer_token = request.headers.get("Authorization", None)
 
-        # If bearer token is not present, return
         if not bearer_token:
             return
 
-        # Split the bearer token
         bearer_token = bearer_token.split(" ")[1]
 
-        # Verify jwt token
         try:
             jwt_data = jwt.decode(
                 bearer_token,
@@ -44,11 +40,9 @@ class AuthenticationContext(Plugin):
         except:
             return
 
-        # Verify expiry
         if datetime.utcfromtimestamp(jwt_data["exp"]) < datetime.utcnow():
             return
 
-        # Get user data
         _db = get_db()
         db: AsyncSession = await anext(_db)
         user = await crud.user.get(db, id=jwt_data["user_id"])

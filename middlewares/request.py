@@ -20,15 +20,8 @@ async def process_dict_val_as_json(inp: dict) -> dict:
 
 class RequestPreProcessor(object):
     async def __call__(self, request: Request, call_next) -> dict:
-        """
-        The order of precedence is:
-        1. body (json)
-        2. form_data
-        3. query_params
-        """
         return_dict = {}
 
-        # Process query_params
         if request.query_params:
             try:
                 data = dict(request.query_params)
@@ -37,7 +30,6 @@ class RequestPreProcessor(object):
             except:
                 pass
 
-        # Process body
         body = await request.body()
         if body:
             try:
@@ -45,7 +37,6 @@ class RequestPreProcessor(object):
             except:
                 pass
 
-        # Process form_data
         form = await request.form()
         if form:
             try:
