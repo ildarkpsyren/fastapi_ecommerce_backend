@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 try:
     APPLICATION_SETTINGS_PATH: str = os.environ.get("APPLICATION_SETTINGS")
     if not APPLICATION_SETTINGS_PATH:
-        APPLICATION_SETTINGS_PATH = os.path.join(os.getcwd(), ".vars")
+        APPLICATION_SETTINGS_PATH = os.path.join(os.getcwd(), ".env")
     dotenv.load_dotenv(APPLICATION_SETTINGS_PATH)
 except:
     pass
@@ -19,21 +19,20 @@ class DevelopmentDBConfig(BaseSettings):
 
 
 class ProductionDBConfig(BaseSettings):
-    PROD_DB_HOST: str
-    PROD_DB_PORT: int
-    PROD_DB_USERNAME: str
-    PROD_DB_PASSWORD: str
-    PROD_DB_DATABASE: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
     PROD_CONN_STRING: str = (
-        "mysql+aiomysql://{username}:{password}@{host}:{port}/{database}"
+        "postgresql+asyncpg://{username}:{password}@{host}:{port}/{database}"
     )
 
 
 class JWTConfig(BaseSettings):
-    JWT_SECRET_KEY: str
-    JWT_ALGORITHM: str
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
-    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
 
 class Environment(BaseSettings):
@@ -58,11 +57,11 @@ class Configuration:
         ),
         "production": create_async_engine(
             PROD_DB_CONFIG.PROD_CONN_STRING.format(
-                username=PROD_DB_CONFIG.PROD_DB_USERNAME,
-                password=PROD_DB_CONFIG.PROD_DB_PASSWORD,
-                host=PROD_DB_CONFIG.PROD_DB_HOST,
-                port=PROD_DB_CONFIG.PROD_DB_PORT,
-                database=PROD_DB_CONFIG.PROD_DB_DATABASE,
+                username=PROD_DB_CONFIG.POSTGRES_USER,
+                password=PROD_DB_CONFIG.POSTGRES_PASSWORD,
+                host=PROD_DB_CONFIG.POSTGRES_HOST,
+                port=PROD_DB_CONFIG.POSTGRES_PORT,
+                database=PROD_DB_CONFIG.POSTGRES_DB,
             ),
             echo=False,
         ),
@@ -74,12 +73,12 @@ class Configuration:
         "development": "sqlite:///{filename}".format(
             filename=DEV_DB_CONFIG.DEV_DB_SQLITE_FILENAME
         ),
-        "production": "mysql+pymysql://{username}:{password}@{host}:{port}/{database}".format(
-            username=PROD_DB_CONFIG.PROD_DB_USERNAME,
-            password=PROD_DB_CONFIG.PROD_DB_PASSWORD,
-            host=PROD_DB_CONFIG.PROD_DB_HOST,
-            port=PROD_DB_CONFIG.PROD_DB_PORT,
-            database=PROD_DB_CONFIG.PROD_DB_DATABASE,
+        "production": "postgresql://{username}:{password}@{host}:{port}/{database}".format(
+            username=PROD_DB_CONFIG.POSTGRES_USER,
+            password=PROD_DB_CONFIG.POSTGRES_PASSWORD,
+            host=PROD_DB_CONFIG.POSTGRES_HOST,
+            port=PROD_DB_CONFIG.POSTGRES_PORT,
+            database=PROD_DB_CONFIG.POSTGRES_DB,
         ),
     }
 
