@@ -1,39 +1,29 @@
+"""FastAPI application entry-point."""
 from fastapi import FastAPI
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette_context import plugins
-from starlette_context.middleware import RawContextMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
-from api.v1.routing import RoutingV1
-from middlewares import RequestPreProcessor, AuthenticationContext
+from app.api.routes import api_router
+from app.core.config import get_settings
+from app.db.session import engine
+from app.models import Base
 
-# Global app variable
-app = FastAPI()
+settings = get_settings()
 
-# Touch Pydantic Encoders
-from core import json
+app = FastAPI(title=settings.app_name)
 
-json.ENCODERS_BY_TYPE
-
-# Middlewares
-"""
-Order of precedence is important here.
-1. Request Middleware
-2. Decyrption Middleware
-3. Context Plugin Middleware
-"""
-app.add_middleware(BaseHTTPMiddleware, dispatch=RequestPreProcessor())
 app.add_middleware(
-    RawContextMiddleware,
-    plugins=(
-        AuthenticationContext(),
-        plugins.RequestIdPlugin(),
-        plugins.CorrelationIdPlugin(),
-    ),
+    CORSMiddleware,
+    allow_origins=settings.backend_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
+app.include_router(api_router)
 
-# Routing Information
-"""
-Add versioned routing information here
-"""
-RoutingV1(app).map_urls()
+
+@app.on_event("startup")
+def on_startup() -> None:
+    """Create database tables on application startup."""
+
+    Base.metadata.create_all(bind=engine)
